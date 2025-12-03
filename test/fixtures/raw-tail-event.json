@@ -1,0 +1,133 @@
+{
+  "wallTime": 28,
+  "cpuTime": 0,
+  "truncated": false,
+  "executionModel": "stateless",
+  "outcome": "ok",
+  "scriptVersion": {
+    "id": "0cc0ae92-f165-428f-9bc4-df785e23596f"
+  },
+  "scriptName": "forward",
+  "diagnosticsChannelEvents": [],
+  "exceptions": [],
+  "logs": [
+    {
+      "message": [
+        "I am just a normal string being logged"
+      ],
+      "level": "log",
+      "timestamp": 1764781653421
+    },
+    {
+      "message": [
+        "I am a string",
+        {
+          "followed": [
+            "by",
+            1,
+            "object"
+          ]
+        }
+      ],
+      "level": "log",
+      "timestamp": 1764781653421
+    },
+    {
+      "message": [
+        "error, console.error. nice to meet you"
+      ],
+      "level": "error",
+      "timestamp": 1764781653421
+    },
+    {
+      "message": [
+        "console.debug, at your service"
+      ],
+      "level": "debug",
+      "timestamp": 1764781653421
+    },
+    {
+      "message": [
+        "didn't know that console.warn was a thing"
+      ],
+      "level": "warn",
+      "timestamp": 1764781653421
+    }
+  ],
+  "eventTimestamp": 1764781653421,
+  "event": {
+    "request": {
+      "url": "https://minivelos.bike/bikes/lars-moulton-tsr",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-encoding": "gzip, br",
+        "cf-connecting-ip": "46.142.14.82",
+        "cf-ipcountry": "DE",
+        "cf-ray": "9a84a935df86451c",
+        "cf-visitor": "{\"scheme\":\"https\"}",
+        "connection": "Keep-Alive",
+        "host": "minivelos.bike",
+        "user-agent": "curl/8.7.1",
+        "x-forwarded-proto": "https",
+        "x-real-ip": "46.142.14.82"
+      },
+      "cf": {
+        "httpProtocol": "HTTP/2",
+        "requestPriority": "weight=16;exclusive=0;group=0;group-weight=0",
+        "edgeRequestKeepAliveStatus": 1,
+        "requestHeaderNames": {},
+        "clientTcpRtt": 12,
+        "colo": "TXL",
+        "asn": 8881,
+        "asOrganization": "1&1 Versatel GmbH",
+        "country": "DE",
+        "isEUCountry": "1",
+        "city": "Potsdam",
+        "continent": "EU",
+        "region": "Brandenburg",
+        "regionCode": "BB",
+        "timezone": "Europe/Berlin",
+        "longitude": "13.06566",
+        "latitude": "52.39886",
+        "postalCode": "14461",
+        "tlsVersion": "TLSv1.3",
+        "tlsCipher": "AEAD-CHACHA20-POLY1305-SHA256",
+        "tlsClientRandom": "+BOLvpcEutLSGa9tRtnanS9HyDkOaea4e23+Ui5vKFA=",
+        "tlsClientCiphersSha1": "eDGmD1H99AwNYzOR+7eoGLo6eLU=",
+        "tlsClientExtensionsSha1": "Ub+nUmIm1U57hdNSUph0R+kx9Gc=",
+        "tlsClientExtensionsSha1Le": "NMNf2YIpLBhtroOEBooGFi+jtJ8=",
+        "tlsExportedAuthenticator": {
+          "clientHandshake": "a29db9591afd76ba3e3b8af5e0bdb2ce93f7ef040f1804090f5d7c42e2438a5b",
+          "serverHandshake": "db182be8105c328e3403e2f984800386ed71453c443e5987d4fc2f23d459b2fd",
+          "clientFinished": "87851d411d6f92336ed545723e0e0809e29de2c3a9864428ad4ffd5a567845dc",
+          "serverFinished": "47415a2ac19bade679f9d19cb969d314f5fb2b7d79b20edf5077ec82eb6caca6"
+        },
+        "tlsClientHelloLength": "315",
+        "tlsClientAuth": {
+          "certPresented": "0",
+          "certVerified": "NONE",
+          "certRevoked": "0",
+          "certIssuerDN": "",
+          "certSubjectDN": "",
+          "certIssuerDNRFC2253": "",
+          "certSubjectDNRFC2253": "",
+          "certIssuerDNLegacy": "",
+          "certSubjectDNLegacy": "",
+          "certSerial": "",
+          "certIssuerSerial": "",
+          "certSKI": "",
+          "certIssuerSKI": "",
+          "certFingerprintSHA1": "",
+          "certFingerprintSHA256": "",
+          "certNotBefore": "",
+          "certNotAfter": ""
+        },
+        "verifiedBotCategory": ""
+      }
+    },
+    "response": {
+      "status": 200
+    }
+  }
+}

@@ -1,0 +1,28 @@
+name = "coralogix-tail-worker"
+main = "src/index.js"
+compatibility_date = "2023-12-01"
+
+# Default configuration (used for development)
+[vars]
+CORALOGIX_ENDPOINT = "https://ingress.eu1.coralogix.com/logs/v1/singles"
+APPLICATION_NAME = "cloudflare-tail"
+SUBSYSTEM_NAME = "unknown-worker"
+
+# Production environment
+[env.production]
+[env.production.vars]
+ENVIRONMENT = "production"
+CORALOGIX_ENDPOINT = "https://ingress.eu1.coralogix.com/logs/v1/singles"
+APPLICATION_NAME = "cloudflare-tail"
+SUBSYSTEM_NAME = "unknown-worker"
+
+# Staging environment
+[env.staging]
+[env.staging.vars]
+ENVIRONMENT = "staging"
+CORALOGIX_ENDPOINT = "https://ingress.eu1.coralogix.com/logs/v1/singles"
+APPLICATION_NAME = "cloudflare-tail"
+SUBSYSTEM_NAME = "unknown-worker"
+
+# Secret that needs to be set via wrangler secret put:
+# CORALOGIX_API_KEY - Your Coralogix Send-Your-Data API key
