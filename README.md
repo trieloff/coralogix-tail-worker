@@ -109,7 +109,7 @@ Add this to your source worker's `wrangler.toml`:
 
 ```toml
 [[tail_consumers]]
-service = "coralogix-tail-worker"
+service = "coralogix-tail-worker-production"  # or -staging, -dev
 ```
 
 #### Option B: Using Cloudflare Dashboard
@@ -118,7 +118,10 @@ service = "coralogix-tail-worker"
 2. Select your source worker
 3. Go to Settings → Triggers
 4. Add a Tail Consumer
-5. Enter the name of your tail worker: `coralogix-tail-worker`
+5. Enter the name of your tail worker:
+   - Production: `coralogix-tail-worker-production`
+   - Staging: `coralogix-tail-worker-staging`
+   - Development: `coralogix-tail-worker-dev`
 
 #### Option C: Using Wrangler CLI
 
@@ -224,7 +227,7 @@ The test suite validates:
 
 3. **No logs appearing in Coralogix**
    - Verify your source workers are configured with tail consumers
-   - Check the tail worker logs: `wrangler tail coralogix-tail-worker`
+   - Check the tail worker logs: `wrangler tail coralogix-tail-worker-production` (or -staging, -dev)
    - Ensure your source workers are generating logs
 
 4. **Rate limiting errors**
@@ -234,8 +237,10 @@ The test suite validates:
 ### Debug Commands
 
 ```bash
-# View tail worker logs
-wrangler tail coralogix-tail-worker
+# View tail worker logs (choose your environment)
+wrangler tail coralogix-tail-worker-production
+wrangler tail coralogix-tail-worker-staging
+wrangler tail coralogix-tail-worker-dev
 
 # View source worker logs
 wrangler tail <your-source-worker-name>
@@ -363,7 +368,7 @@ Monitor these logs in the Cloudflare Workers dashboard or by tailing this worker
 Enable debug logging by checking the Cloudflare Workers dashboard logs or using:
 
 ```bash
-wrangler tail coralogix-tail-worker
+wrangler tail coralogix-tail-worker-production  # or -staging, -dev
 ```
 
 ## License

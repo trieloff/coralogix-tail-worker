@@ -1,4 +1,4 @@
-name = "coralogix-tail-worker"
+name = "coralogix-tail-worker-dev"
 main = "src/index.js"
 compatibility_date = "2023-12-01"
 
@@ -10,6 +10,7 @@ SUBSYSTEM_NAME = "unknown-worker"
 
 # Production environment
 [env.production]
+name = "coralogix-tail-worker-production"
 [env.production.vars]
 ENVIRONMENT = "production"
 CORALOGIX_ENDPOINT = "https://ingress.eu1.coralogix.com/logs/v1/singles"
@@ -18,6 +19,7 @@ SUBSYSTEM_NAME = "unknown-worker"
 
 # Staging environment
 [env.staging]
+name = "coralogix-tail-worker-staging"
 [env.staging.vars]
 ENVIRONMENT = "staging"
 CORALOGIX_ENDPOINT = "https://ingress.eu1.coralogix.com/logs/v1/singles"
