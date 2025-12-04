@@ -147,10 +147,23 @@ jobs:
 
       - name: Set Coralogix API Key
         run: |
-          echo "⚠️  Skipping secret management - requires additional API token permissions"
-          echo "Please set CORALOGIX_API_KEY manually using: wrangler secret put CORALOGIX_API_KEY --env production"
+          echo "🔑 Setting Coralogix API Key for both environments..."
+          echo "Using Account ID: ${{ steps.get-account-id.outputs.account_id }}"
+
+          # Set secret for production environment
+          if [ "${{ needs.prepare-matrix.outputs.environment }}" = "production" ]; then
+            echo "Setting CORALOGIX_API_KEY for production environment"
+            echo "$CORALOGIX_API_KEY" | wrangler secret put CORALOGIX_API_KEY --env production
+          else
+            echo "Setting CORALOGIX_API_KEY for staging environment"
+            echo "$CORALOGIX_API_KEY" | wrangler secret put CORALOGIX_API_KEY --env staging
+          fi
+
+          echo "✅ Coralogix API Key configured successfully"
         env:
           CLOUDFLARE_API_TOKEN: ${{ steps.get-token.outputs.token }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ steps.get-account-id.outputs.account_id }}
+          CORALOGIX_API_KEY: ${{ secrets.CORALOGIX_API_KEY }}
 
       - name: Deploy to Production
         if: needs.prepare-matrix.outputs.environment == 'production'
