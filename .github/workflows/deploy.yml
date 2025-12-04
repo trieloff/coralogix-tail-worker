@@ -126,10 +126,22 @@ jobs:
       - name: Install Wrangler
         run: npm install -g wrangler@latest
 
-      - name: Verify Wrangler Authentication
+      - name: Verify Wrangler Authentication and Extract Account ID
+        id: get-account-id
         run: |
           echo "Testing Wrangler authentication..."
-          wrangler whoami
+          WHOAMI_OUTPUT=$(wrangler whoami)
+          echo "$WHOAMI_OUTPUT"
+
+          # Extract account ID from whoami output (32-character hex string)
+          ACCOUNT_ID=$(echo "$WHOAMI_OUTPUT" | grep -o '[a-f0-9]\{32\}')
+          if [ -z "$ACCOUNT_ID" ]; then
+            echo "❌ Could not extract Account ID from wrangler whoami output"
+            exit 1
+          fi
+
+          echo "✅ Extracted Account ID: $ACCOUNT_ID"
+          echo "account_id=$ACCOUNT_ID" >> $GITHUB_OUTPUT
         env:
           CLOUDFLARE_API_TOKEN: ${{ steps.get-token.outputs.token }}
 
@@ -144,17 +156,21 @@ jobs:
         if: needs.prepare-matrix.outputs.environment == 'production'
         run: |
           echo "🚀 Deploying to PRODUCTION (Account ${{ matrix.account_index }})"
+          echo "Using Account ID: ${{ steps.get-account-id.outputs.account_id }}"
           wrangler deploy --env production
         env:
           CLOUDFLARE_API_TOKEN: ${{ steps.get-token.outputs.token }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ steps.get-account-id.outputs.account_id }}
 
       - name: Deploy to Staging
         if: needs.prepare-matrix.outputs.environment == 'staging'
         run: |
           echo "🧪 Deploying to STAGING (Account ${{ matrix.account_index }})"
+          echo "Using Account ID: ${{ steps.get-account-id.outputs.account_id }}"
           wrangler deploy --env staging
         env:
           CLOUDFLARE_API_TOKEN: ${{ steps.get-token.outputs.token }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ steps.get-account-id.outputs.account_id }}
 
       - name: Deployment Summary
         run: |
