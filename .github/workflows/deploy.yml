@@ -124,7 +124,7 @@ jobs:
           EOF
 
       - name: Install Wrangler
-        run: npm install -g wrangler@3.114.15
+        run: npm install -g wrangler@latest
 
       - name: Verify Wrangler Authentication
         run: |
