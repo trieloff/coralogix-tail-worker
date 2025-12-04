@@ -27,43 +27,51 @@ jobs:
 
       - name: Parse Cloudflare tokens and create matrix
         id: set-matrix
+        env:
+          TOKENS: ${{ secrets.CLOUDFLARE_TOKENS }}
         run: |
-          # Write tokens to temporary file to handle multiline properly
-          echo '${{ secrets.CLOUDFLARE_TOKENS }}' > /tmp/tokens.txt
+          echo "Debug: Raw CLOUDFLARE_TOKENS content:"
+          echo "[$TOKENS]"
+          echo "---"
 
-          # Create JSON array for matrix
-          matrix_json="["
-          account_index=1
-          first_token=true
+          # Use Python for more reliable JSON generation
+          python3 << 'EOF'
+          import os
+          import json
 
-          while IFS= read -r token || [[ -n "$token" ]]; do
-            # Skip empty lines and trim whitespace
-            token=$(echo "$token" | xargs)
-            if [[ -n "$token" ]]; then
-              if [[ "$first_token" == "false" ]]; then
-                matrix_json+=","
-              fi
-              matrix_json+="{\"account_index\":$account_index,\"token\":\"$token\"}"
-              account_index=$((account_index + 1))
-              first_token=false
-            fi
-          done < /tmp/tokens.txt
+          tokens_raw = os.environ.get('TOKENS', '').strip()
+          print(f"Python received tokens: [{tokens_raw}]")
 
-          matrix_json+="]"
+          if not tokens_raw:
+              print("ERROR: CLOUDFLARE_TOKENS secret is empty")
+              exit(1)
 
-          # Clean up
-          rm -f /tmp/tokens.txt
+          # Split by newlines and filter out empty lines
+          tokens = [token.strip() for token in tokens_raw.split('\n') if token.strip()]
 
-          # Validate matrix has at least one entry
-          if [[ "$matrix_json" == "[]" ]]; then
-            echo "ERROR: No valid Cloudflare tokens found in CLOUDFLARE_TOKENS secret"
-            echo "Please check that CLOUDFLARE_TOKENS is set with line-separated tokens"
-            exit 1
-          fi
+          print(f"Found {len(tokens)} token(s)")
 
-          echo "matrix={\"include\":$matrix_json}" >> $GITHUB_OUTPUT
-          echo "Generated matrix: {\"include\":$matrix_json}"
-          echo "Number of accounts: $((account_index - 1))"
+          if not tokens:
+              print("ERROR: No valid tokens found after parsing")
+              exit(1)
+
+          # Create matrix entries
+          matrix_entries = []
+          for i, token in enumerate(tokens, 1):
+              matrix_entries.append({
+                  "account_index": i,
+                  "token": token
+              })
+
+          matrix = {"include": matrix_entries}
+          matrix_json = json.dumps(matrix)
+
+          print(f"Generated matrix: {matrix_json}")
+
+          # Write to GitHub output
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+              f.write(f"matrix={matrix_json}\n")
+          EOF
 
   deploy:
     needs: prepare-matrix
