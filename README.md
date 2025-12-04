@@ -1,5 +1,9 @@
 # Coralogix Tail Worker
 
+[![Deploy](https://github.com/trieloff/coralogix-tail-worker/actions/workflows/deploy.yml/badge.svg)](https://github.com/trieloff/coralogix-tail-worker/actions/workflows/deploy.yml)
+[![Test](https://github.com/trieloff/coralogix-tail-worker/actions/workflows/test.yml/badge.svg)](https://github.com/trieloff/coralogix-tail-worker/actions/workflows/test.yml)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+
 A Cloudflare Tail Worker that receives log events from other Cloudflare Workers and forwards them to the Coralogix Singles API for centralized log management.
 
 ## Features
@@ -82,17 +86,79 @@ The worker is currently configured for the EU1 region (`eu1.coralogix.com`). To 
 
 ## Deployment
 
-### Development
+### Automated Deployment (GitHub Actions)
+
+The repository includes automated deployment via GitHub Actions:
+
+- **Main branch** → Deploys to **production** environment
+- **All other branches** → Deploy to **staging** environment
+- **Multi-account support** → Deploys to multiple Cloudflare accounts simultaneously
+
+#### Setup GitHub Actions Deployment
+
+1. **Set up Cloudflare API Tokens**:
+   ```bash
+   # Create API tokens for each Cloudflare account
+   # Go to: https://dash.cloudflare.com/profile/api-tokens
+   # Use "Custom token" with permissions:
+   # - Account: Cloudflare Workers:Edit
+   # - Zone: Zone:Read (if using custom domains)
+   ```
+
+2. **Configure GitHub Secrets**:
+   - Go to your GitHub repository → Settings → Secrets and variables → Actions
+   - Add secret: `CLOUDFLARE_TOKENS`
+   - Value should be **line-separated tokens** for multiple accounts:
+   ```
+   your-first-account-token-here
+   your-second-account-token-here
+   your-third-account-token-here
+   ```
+
+3. **Set up Coralogix API Keys**:
+   - Add secrets for each environment:
+     - `CORALOGIX_API_KEY_PRODUCTION`
+     - `CORALOGIX_API_KEY_STAGING`
+
+#### Deployment Behavior
+
+- ✅ **Tests run first** - Deployment only proceeds if tests pass
+- ✅ **Multi-account matrix** - Deploys to all configured Cloudflare accounts
+- ✅ **Environment isolation** - Production and staging use different worker names
+- ✅ **Fail-safe** - If one account fails, others continue deploying
+- ✅ **Deployment summary** - Clear reporting of what was deployed where
+
+#### GitHub Actions Workflows
+
+The repository includes two workflows:
+
+1. **`deploy.yml`** - Automated deployment on push
+   - Triggers on all branch pushes
+   - Main branch → Production deployment
+   - Other branches → Staging deployment
+   - Multi-account matrix deployment
+
+2. **`test.yml`** - Testing on pull requests
+   - Runs setup validation
+   - Runs conversion tests
+   - Validates wrangler configuration
+   - No deployment, just testing
+
+### Manual Deployment
+
+For local development and testing:
+
+#### Development
 ```bash
 npm run dev
 ```
 
-### Staging
+#### Staging
 ```bash
 npm run deploy:staging
 ```
 
-### Production
+#### Production
 ```bash
 npm run deploy:production
 ```

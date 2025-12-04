@@ -1,0 +1,48 @@
+name: Test Coralogix Tail Worker
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:  # Allow manual triggering
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run setup validation
+        run: npm run test:setup
+
+      - name: Run conversion tests
+        run: npm test
+
+      - name: Validate wrangler configuration
+        run: |
+          # Install wrangler for config validation
+          npm install -g wrangler@3.114.15
+          
+          # Validate wrangler.toml syntax
+          echo "🔍 Validating wrangler.toml configuration..."
+          wrangler deploy --dry-run --env staging
+          wrangler deploy --dry-run --env production
+
+      - name: Test Summary
+        run: |
+          echo "## ✅ All Tests Passed!" >> $GITHUB_STEP_SUMMARY
+          echo "- **Setup validation**: ✅ Passed" >> $GITHUB_STEP_SUMMARY
+          echo "- **Conversion tests**: ✅ Passed" >> $GITHUB_STEP_SUMMARY
+          echo "- **Wrangler config**: ✅ Valid" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Ready for deployment! 🚀" >> $GITHUB_STEP_SUMMARY
