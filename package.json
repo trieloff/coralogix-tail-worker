@@ -20,7 +20,7 @@
     "logging"
   ],
   "author": "",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "devDependencies": {
     "wrangler": "^3.0.0"
   }
