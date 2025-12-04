@@ -28,31 +28,51 @@ jobs:
       - name: Parse Cloudflare tokens and create matrix
         id: set-matrix
         run: |
-          # Split CLOUDFLARE_TOKENS by newlines and create matrix
-          IFS=$'\n' read -rd '' -a tokens <<< "${{ secrets.CLOUDFLARE_TOKENS }}" || true
-          
+          # Write tokens to temporary file to handle multiline properly
+          echo '${{ secrets.CLOUDFLARE_TOKENS }}' > /tmp/tokens.txt
+
           # Create JSON array for matrix
           matrix_json="["
-          for i in "${!tokens[@]}"; do
-            if [[ -n "${tokens[$i]// }" ]]; then  # Skip empty lines
-              if [[ $i -gt 0 ]]; then
+          account_index=1
+          first_token=true
+
+          while IFS= read -r token || [[ -n "$token" ]]; do
+            # Skip empty lines and trim whitespace
+            token=$(echo "$token" | xargs)
+            if [[ -n "$token" ]]; then
+              if [[ "$first_token" == "false" ]]; then
                 matrix_json+=","
               fi
-              matrix_json+="{\"account_index\":$((i+1)),\"token\":\"${tokens[$i]}\"}"
+              matrix_json+="{\"account_index\":$account_index,\"token\":\"$token\"}"
+              account_index=$((account_index + 1))
+              first_token=false
             fi
-          done
+          done < /tmp/tokens.txt
+
           matrix_json+="]"
-          
+
+          # Clean up
+          rm -f /tmp/tokens.txt
+
+          # Validate matrix has at least one entry
+          if [[ "$matrix_json" == "[]" ]]; then
+            echo "ERROR: No valid Cloudflare tokens found in CLOUDFLARE_TOKENS secret"
+            echo "Please check that CLOUDFLARE_TOKENS is set with line-separated tokens"
+            exit 1
+          fi
+
           echo "matrix={\"include\":$matrix_json}" >> $GITHUB_OUTPUT
           echo "Generated matrix: {\"include\":$matrix_json}"
+          echo "Number of accounts: $((account_index - 1))"
 
   deploy:
     needs: prepare-matrix
     runs-on: ubuntu-latest
+    if: needs.prepare-matrix.outputs.matrix != '{"include":[]}'
     strategy:
       matrix: ${{ fromJson(needs.prepare-matrix.outputs.matrix) }}
       fail-fast: false  # Continue deploying to other accounts even if one fails
-    
+
     environment: ${{ needs.prepare-matrix.outputs.environment }}
     
     steps:
