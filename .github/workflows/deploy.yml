@@ -116,17 +116,22 @@ jobs:
 
           token = tokens[account_index - 1]  # Convert to 0-based index
           print(f"Using token for account {account_index}")
+          print(f"Token length: {len(token)}")
 
           # Write to GitHub output
           with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
               f.write(f"token={token}\n")
           EOF
 
-      - name: Setup Wrangler
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ steps.get-token.outputs.token }}
-          wranglerVersion: '3.114.15'
+      - name: Install Wrangler
+        run: npm install -g wrangler@3.114.15
+
+      - name: Verify Wrangler Authentication
+        run: |
+          echo "Testing Wrangler authentication..."
+          wrangler whoami
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ steps.get-token.outputs.token }}
 
       - name: Set Coralogix API Key
         run: |
