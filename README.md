@@ -104,6 +104,10 @@ The repository includes automated deployment via GitHub Actions:
    # Use "Custom token" with permissions:
    # - Account: Cloudflare Workers:Edit
    # - Zone: Zone:Read (if using custom domains)
+   #
+   # Note: Secret management requires additional permissions
+   # For now, set secrets manually after deployment:
+   # wrangler secret put CORALOGIX_API_KEY --env production
    ```
 
 2. **Configure GitHub Secrets**:
