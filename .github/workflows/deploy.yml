@@ -30,9 +30,7 @@ jobs:
         env:
           TOKENS: ${{ secrets.CLOUDFLARE_TOKENS }}
         run: |
-          echo "Debug: Raw CLOUDFLARE_TOKENS content:"
-          echo "[$TOKENS]"
-          echo "---"
+          echo "Debug: Parsing CLOUDFLARE_TOKENS..."
 
           # Use Python for more reliable JSON generation
           python3 << 'EOF'
@@ -40,7 +38,7 @@ jobs:
           import json
 
           tokens_raw = os.environ.get('TOKENS', '').strip()
-          print(f"Python received tokens: [{tokens_raw}]")
+          print(f"Received tokens (length: {len(tokens_raw)})")
 
           if not tokens_raw:
               print("ERROR: CLOUDFLARE_TOKENS secret is empty")
@@ -55,12 +53,11 @@ jobs:
               print("ERROR: No valid tokens found after parsing")
               exit(1)
 
-          # Create matrix entries
+          # Create matrix entries with indices only (no secrets in matrix)
           matrix_entries = []
-          for i, token in enumerate(tokens, 1):
+          for i in range(len(tokens)):
               matrix_entries.append({
-                  "account_index": i,
-                  "token": token
+                  "account_index": i + 1
               })
 
           matrix = {"include": matrix_entries}
@@ -99,10 +96,36 @@ jobs:
       - name: Run tests
         run: npm test
 
+      - name: Extract Cloudflare token for this account
+        id: get-token
+        env:
+          TOKENS: ${{ secrets.CLOUDFLARE_TOKENS }}
+          ACCOUNT_INDEX: ${{ matrix.account_index }}
+        run: |
+          python3 << 'EOF'
+          import os
+
+          tokens_raw = os.environ.get('TOKENS', '').strip()
+          account_index = int(os.environ.get('ACCOUNT_INDEX', '1'))
+
+          tokens = [token.strip() for token in tokens_raw.split('\n') if token.strip()]
+
+          if account_index > len(tokens):
+              print(f"ERROR: Account index {account_index} exceeds number of tokens ({len(tokens)})")
+              exit(1)
+
+          token = tokens[account_index - 1]  # Convert to 0-based index
+          print(f"Using token for account {account_index}")
+
+          # Write to GitHub output
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+              f.write(f"token={token}\n")
+          EOF
+
       - name: Setup Wrangler
         uses: cloudflare/wrangler-action@v3
         with:
-          apiToken: ${{ matrix.token }}
+          apiToken: ${{ steps.get-token.outputs.token }}
           wranglerVersion: '3.114.15'
 
       - name: Set Coralogix API Key
@@ -114,7 +137,7 @@ jobs:
             wrangler secret put CORALOGIX_API_KEY --env staging <<< "${{ secrets.CORALOGIX_API_KEY }}"
           fi
         env:
-          CLOUDFLARE_API_TOKEN: ${{ matrix.token }}
+          CLOUDFLARE_API_TOKEN: ${{ steps.get-token.outputs.token }}
 
       - name: Deploy to Production
         if: needs.prepare-matrix.outputs.environment == 'production'
@@ -122,7 +145,7 @@ jobs:
           echo "🚀 Deploying to PRODUCTION (Account ${{ matrix.account_index }})"
           wrangler deploy --env production
         env:
-          CLOUDFLARE_API_TOKEN: ${{ matrix.token }}
+          CLOUDFLARE_API_TOKEN: ${{ steps.get-token.outputs.token }}
 
       - name: Deploy to Staging
         if: needs.prepare-matrix.outputs.environment == 'staging'
@@ -130,7 +153,7 @@ jobs:
           echo "🧪 Deploying to STAGING (Account ${{ matrix.account_index }})"
           wrangler deploy --env staging
         env:
-          CLOUDFLARE_API_TOKEN: ${{ matrix.token }}
+          CLOUDFLARE_API_TOKEN: ${{ steps.get-token.outputs.token }}
 
       - name: Deployment Summary
         run: |
