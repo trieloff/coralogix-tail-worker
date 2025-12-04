@@ -134,14 +134,14 @@ jobs:
           echo "$WHOAMI_OUTPUT"
 
           # Extract account ID from whoami output (32-character hex string)
-          ACCOUNT_ID=$(echo "$WHOAMI_OUTPUT" | grep -o '[a-f0-9]\{32\}')
+          ACCOUNT_ID=$(echo "$WHOAMI_OUTPUT" | grep -o '[a-f0-9]\{32\}' | head -1)
           if [ -z "$ACCOUNT_ID" ]; then
             echo "❌ Could not extract Account ID from wrangler whoami output"
             exit 1
           fi
 
           echo "✅ Extracted Account ID: $ACCOUNT_ID"
-          echo "account_id=$ACCOUNT_ID" >> $GITHUB_OUTPUT
+          echo "account_id=$ACCOUNT_ID" >> "$GITHUB_OUTPUT"
         env:
           CLOUDFLARE_API_TOKEN: ${{ steps.get-token.outputs.token }}
 
