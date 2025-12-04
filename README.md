@@ -91,7 +91,8 @@ The worker is currently configured for the EU1 region (`eu1.coralogix.com`). To 
 The repository includes automated deployment via GitHub Actions:
 
 - **Main branch** → Deploys to **production** environment
-- **All other branches** → Deploy to **staging** environment
+- **All other branches** → Deploy to **staging** environment (except `develop`)
+- **Develop branch** → **No auto-deployment** (reserved for local development)
 - **Multi-account support** → Deploys to multiple Cloudflare accounts simultaneously
 
 #### Setup GitHub Actions Deployment
@@ -115,10 +116,9 @@ The repository includes automated deployment via GitHub Actions:
    your-third-account-token-here
    ```
 
-3. **Set up Coralogix API Keys**:
-   - Add secrets for each environment:
-     - `CORALOGIX_API_KEY_PRODUCTION`
-     - `CORALOGIX_API_KEY_STAGING`
+3. **Set up Coralogix API Key**:
+   - Add secret: `CORALOGIX_API_KEY`
+   - This single key will be used for both production and staging environments
 
 #### Deployment Behavior
 
@@ -143,6 +143,24 @@ The repository includes two workflows:
    - Runs conversion tests
    - Validates wrangler configuration
    - No deployment, just testing
+
+#### Deployment Matrix
+
+The system creates a build matrix for each Cloudflare token:
+- **Account 1**: Deploys to first account
+- **Account 2**: Deploys to second account
+- **Account 3**: Deploys to third account
+- etc.
+
+Each deployment runs in parallel with proper isolation.
+
+#### Environment Behavior
+
+| Branch | Environment | Worker Name | Coralogix API Key | Auto-Deploy |
+|--------|-------------|-------------|-------------------|-------------|
+| `main` | Production | `coralogix-tail-worker-production` | `CORALOGIX_API_KEY` | ✅ Yes |
+| `feature/*` | Staging | `coralogix-tail-worker-staging` | `CORALOGIX_API_KEY` | ✅ Yes |
+| `develop` | - | - | - | ❌ No (local dev only) |
 
 ### Manual Deployment
 

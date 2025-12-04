@@ -2,7 +2,9 @@ name: Deploy Coralogix Tail Worker
 
 on:
   push:
-    branches: ['**']  # Deploy on all branch pushes
+    branches:
+      - '**'  # Deploy on all branch pushes
+      - '!develop'  # Exclude develop branch (reserved for local development)
   pull_request:
     branches: [main]
     types: [closed]
@@ -75,19 +77,14 @@ jobs:
           apiToken: ${{ matrix.token }}
           wranglerVersion: '3.114.15'
 
-      - name: Set Coralogix API Key for Production
-        if: needs.prepare-matrix.outputs.environment == 'production'
+      - name: Set Coralogix API Key
         run: |
-          echo "Setting Coralogix API key for production..."
-          wrangler secret put CORALOGIX_API_KEY --env production <<< "${{ secrets.CORALOGIX_API_KEY_PRODUCTION }}"
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ matrix.token }}
-
-      - name: Set Coralogix API Key for Staging
-        if: needs.prepare-matrix.outputs.environment == 'staging'
-        run: |
-          echo "Setting Coralogix API key for staging..."
-          wrangler secret put CORALOGIX_API_KEY --env staging <<< "${{ secrets.CORALOGIX_API_KEY_STAGING }}"
+          echo "Setting shared Coralogix API key..."
+          if [[ "${{ needs.prepare-matrix.outputs.environment }}" == "production" ]]; then
+            wrangler secret put CORALOGIX_API_KEY --env production <<< "${{ secrets.CORALOGIX_API_KEY }}"
+          else
+            wrangler secret put CORALOGIX_API_KEY --env staging <<< "${{ secrets.CORALOGIX_API_KEY }}"
+          fi
         env:
           CLOUDFLARE_API_TOKEN: ${{ matrix.token }}
 
