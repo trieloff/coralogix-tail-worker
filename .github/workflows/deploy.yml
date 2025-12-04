@@ -133,22 +133,31 @@ jobs:
           WHOAMI_OUTPUT=$(wrangler whoami)
           echo "$WHOAMI_OUTPUT"
 
-          # Extract account ID from whoami output (32-character hex string)
+          # Extract account ID and name from whoami output
           ACCOUNT_ID=$(echo "$WHOAMI_OUTPUT" | grep -o '[a-f0-9]\{32\}' | head -1)
+          ACCOUNT_NAME=$(echo "$WHOAMI_OUTPUT" | grep "│.*│.*│" | grep -v "Account Name" | grep -v "─" | sed 's/^[^│]*│[[:space:]]*//' | sed 's/[[:space:]]*│.*$//' | head -1)
+
           if [ -z "$ACCOUNT_ID" ]; then
             echo "❌ Could not extract Account ID from wrangler whoami output"
             exit 1
           fi
 
+          if [ -z "$ACCOUNT_NAME" ]; then
+            echo "⚠️  Could not extract Account Name, using Account ID as fallback"
+            ACCOUNT_NAME="Account $ACCOUNT_ID"
+          fi
+
           echo "✅ Extracted Account ID: $ACCOUNT_ID"
+          echo "✅ Extracted Account Name: $ACCOUNT_NAME"
           echo "account_id=$ACCOUNT_ID" >> "$GITHUB_OUTPUT"
+          echo "account_name=$ACCOUNT_NAME" >> "$GITHUB_OUTPUT"
         env:
           CLOUDFLARE_API_TOKEN: ${{ steps.get-token.outputs.token }}
 
       - name: Set Coralogix API Key
         run: |
           echo "🔑 Setting Coralogix API Key for both environments..."
-          echo "Using Account ID: ${{ steps.get-account-id.outputs.account_id }}"
+          echo "Using Account: ${{ steps.get-account-id.outputs.account_name }} (${{ steps.get-account-id.outputs.account_id }})"
 
           # Set secret for production environment
           if [ "${{ needs.prepare-matrix.outputs.environment }}" = "production" ]; then
@@ -168,8 +177,8 @@ jobs:
       - name: Deploy to Production
         if: needs.prepare-matrix.outputs.environment == 'production'
         run: |
-          echo "🚀 Deploying to PRODUCTION (Account ${{ matrix.account_index }})"
-          echo "Using Account ID: ${{ steps.get-account-id.outputs.account_id }}"
+          echo "🚀 Deploying to PRODUCTION"
+          echo "Account: ${{ steps.get-account-id.outputs.account_name }} (${{ steps.get-account-id.outputs.account_id }})"
           wrangler deploy --env production
         env:
           CLOUDFLARE_API_TOKEN: ${{ steps.get-token.outputs.token }}
@@ -178,8 +187,8 @@ jobs:
       - name: Deploy to Staging
         if: needs.prepare-matrix.outputs.environment == 'staging'
         run: |
-          echo "🧪 Deploying to STAGING (Account ${{ matrix.account_index }})"
-          echo "Using Account ID: ${{ steps.get-account-id.outputs.account_id }}"
+          echo "🧪 Deploying to STAGING"
+          echo "Account: ${{ steps.get-account-id.outputs.account_name }} (${{ steps.get-account-id.outputs.account_id }})"
           wrangler deploy --env staging
         env:
           CLOUDFLARE_API_TOKEN: ${{ steps.get-token.outputs.token }}
@@ -189,7 +198,7 @@ jobs:
         run: |
           echo "## 🎯 Deployment Complete" >> $GITHUB_STEP_SUMMARY
           echo "- **Environment**: ${{ needs.prepare-matrix.outputs.environment }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Account**: ${{ matrix.account_index }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Account**: ${{ steps.get-account-id.outputs.account_name }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Branch**: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
           
